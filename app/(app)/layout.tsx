@@ -32,10 +32,16 @@ export default async function AppLayout({
 
   const { data: partner } = await supabase
     .from("household_members")
-    .select("display_name")
+    .select("user_id, display_name")
     .eq("household_id", member.household_id)
     .neq("user_id", user.id)
     .maybeSingle();
+
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name, color, icon")
+    .eq("household_id", member.household_id)
+    .order("name");
 
   const household = Array.isArray(member.households)
     ? member.households[0]
@@ -50,7 +56,9 @@ export default async function AppLayout({
         householdId: member.household_id,
         householdName: household?.name ?? "",
         inviteCode: household?.invite_code ?? "",
+        partnerId: partner?.user_id ?? null,
         partnerName: partner?.display_name ?? null,
+        categories: categories ?? [],
       }}
     >
       <div className="flex min-h-dvh">

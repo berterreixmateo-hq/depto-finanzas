@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { generateInviteCode } from "@/lib/utils/invite-code";
+import { DEFAULT_CATEGORIES } from "@/lib/default-categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,6 +69,15 @@ export function OnboardingForm() {
       });
       return;
     }
+
+    await supabase.from("categories").insert(
+      DEFAULT_CATEGORIES.map((category) => ({
+        household_id: household.id,
+        name: category.name,
+        color: category.color,
+        icon: category.icon,
+      })),
+    );
 
     toast.success(`Hogar creado. Código para tu pareja: ${household.invite_code}`);
     router.push("/");

@@ -2,6 +2,13 @@
 
 import { createContext, useContext } from "react";
 
+export interface HouseholdCategory {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+}
+
 export interface HouseholdContextValue {
   userId: string;
   email: string;
@@ -9,7 +16,9 @@ export interface HouseholdContextValue {
   householdId: string;
   householdName: string;
   inviteCode: string;
+  partnerId: string | null;
   partnerName: string | null;
+  categories: HouseholdCategory[];
 }
 
 const HouseholdContext = createContext<HouseholdContextValue | null>(null);
