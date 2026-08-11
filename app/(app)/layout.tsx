@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HouseholdProvider } from "@/lib/household-context";
+import { DEFAULT_CATEGORIES } from "@/lib/default-categories";
 import { Sidebar } from "@/components/nav/sidebar";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { FabAddExpense } from "@/components/nav/fab-add-expense";
@@ -37,11 +38,31 @@ export default async function AppLayout({
     .neq("user_id", user.id)
     .maybeSingle();
 
-  const { data: categories } = await supabase
+  let { data: categories } = await supabase
     .from("categories")
     .select("id, name, color, icon")
     .eq("household_id", member.household_id)
     .order("name");
+
+  // Seed perezoso: un hogar sin categorías deja la carga de gastos inutilizable
+  // (el select abre vacío). Pasa si el insert del onboarding falló. Mismo criterio
+  // que las instancias de gastos fijos: se completa al entrar, sin cron.
+  if (!categories?.length) {
+    const { data: seeded } = await supabase
+      .from("categories")
+      .insert(
+        DEFAULT_CATEGORIES.map((category) => ({
+          household_id: member.household_id,
+          name: category.name,
+          color: category.color,
+          icon: category.icon,
+        })),
+      )
+      .select("id, name, color, icon")
+      .order("name");
+
+    categories = seeded ?? categories;
+  }
 
   const household = Array.isArray(member.households)
     ? member.households[0]

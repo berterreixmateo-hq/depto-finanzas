@@ -55,6 +55,7 @@ export function ExpensesView() {
   const [monthDate, setMonthDate] = useState(() => startOfMonth(new Date()));
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [expenses, setExpenses] = useState<ExpenseWithCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -76,8 +77,8 @@ export function ExpensesView() {
     if (categoryFilter !== "all") {
       query = query.eq("category_id", categoryFilter);
     }
-    if (search.trim()) {
-      query = query.ilike("description", `%${search.trim()}%`);
+    if (debouncedSearch.trim()) {
+      query = query.ilike("description", `%${debouncedSearch.trim()}%`);
     }
 
     const { data, error } = await query;
@@ -88,7 +89,12 @@ export function ExpensesView() {
       return;
     }
     setExpenses((data ?? []) as ExpenseWithCategory[]);
-  }, [supabase, householdId, monthDate, categoryFilter, search]);
+  }, [supabase, householdId, monthDate, categoryFilter, debouncedSearch]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timeout);
+  }, [search]);
 
   useEffect(() => {
     fetchExpenses();
@@ -107,6 +113,12 @@ export function ExpensesView() {
     toast.success("Gasto borrado");
     notifyExpensesChanged();
   }
+
+  // Sin `items` en el Root, <SelectValue> de Base UI muestra el valor crudo ("all").
+  const categoryFilterItems = [
+    { value: "all", label: "Todas las categorías" },
+    ...categories.map((category) => ({ value: category.id, label: category.name })),
+  ];
 
   const groups = new Map<string, ExpenseWithCategory[]>();
   for (const expense of expenses) {
@@ -157,6 +169,7 @@ export function ExpensesView() {
           />
         </div>
         <Select
+          items={categoryFilterItems}
           value={categoryFilter}
           onValueChange={(value) => value && setCategoryFilter(value)}
         >

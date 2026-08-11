@@ -70,7 +70,7 @@ export function OnboardingForm() {
       return;
     }
 
-    await supabase.from("categories").insert(
+    const { error: categoriesError } = await supabase.from("categories").insert(
       DEFAULT_CATEGORIES.map((category) => ({
         household_id: household.id,
         name: category.name,
@@ -78,6 +78,12 @@ export function OnboardingForm() {
         icon: category.icon,
       })),
     );
+
+    if (categoriesError) {
+      toast.error("El hogar quedó creado, pero sin categorías", {
+        description: categoriesError.message,
+      });
+    }
 
     toast.success(`Hogar creado. Código para tu pareja: ${household.invite_code}`);
     router.push("/");

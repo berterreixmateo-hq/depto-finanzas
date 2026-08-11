@@ -8,6 +8,7 @@ import { useHousehold } from "@/lib/household-context";
 import { notifyExpensesChanged } from "@/lib/expenses-bus";
 import type { ExpenseWithCategory } from "@/lib/types/expense";
 import type { SplitType } from "@/lib/types/database.types";
+import { amountToInput, formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,7 +38,7 @@ export function ExpenseForm({
   const { householdId, userId, displayName, partnerId, partnerName, categories } =
     useHousehold();
 
-  const [amount, setAmount] = useState(expense ? String(expense.amount) : "");
+  const [amount, setAmount] = useState(expense ? amountToInput(expense.amount) : "");
   const [description, setDescription] = useState(expense?.description ?? "");
   const [categoryId, setCategoryId] = useState(
     expense?.category_id ?? categories[0]?.id ?? "",
@@ -56,6 +57,17 @@ export function ExpenseForm({
 
   const payerLabel = paidBy === userId ? "mío" : `de ${partnerName}`;
 
+  // Base UI necesita `items` en el Root: sin eso <SelectValue> imprime el valor
+  // crudo (el UUID) en vez de la etiqueta del ítem elegido.
+  const categoryItems = categories.map((category) => ({
+    value: category.id,
+    label: category.name,
+  }));
+  const payerItems = [
+    { value: userId, label: `Yo (${displayName})` },
+    ...(partnerId ? [{ value: partnerId, label: partnerName ?? "Mi pareja" }] : []),
+  ];
+
   function payerSharePercentage(): number {
     if (splitType === "50_50") return 50;
     if (splitType === "only_payer") return 100;
@@ -66,8 +78,8 @@ export function ExpenseForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const amountValue = Number(amount);
-    if (!amountValue || amountValue <= 0) {
+    const amountValue = parseAmountInput(amount);
+    if (!Number.isFinite(amountValue) || amountValue <= 0) {
       toast.error("Ingresá un monto válido");
       return;
     }
@@ -120,14 +132,12 @@ export function ExpenseForm({
           </span>
           <Input
             id="expense-amount"
-            type="number"
+            type="text"
             inputMode="decimal"
-            min="0"
-            step="0.01"
             placeholder="0"
             autoFocus
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => setAmount(formatAmountInput(e.target.value))}
             className="h-14 pl-9 text-3xl font-semibold tabular-nums"
           />
         </div>
@@ -145,8 +155,12 @@ export function ExpenseForm({
 
       <div className="flex flex-col gap-2">
         <Label>Categoría</Label>
-        <Select value={categoryId} onValueChange={(value) => value && setCategoryId(value)}>
-          <SelectTrigger className="w-full">
+        <Select
+          items={categoryItems}
+          value={categoryId}
+          onValueChange={(value) => value && setCategoryId(value)}
+        >
+          <SelectTrigger className="w-full" disabled={categories.length === 0}>
             <SelectValue placeholder="Elegí una categoría" />
           </SelectTrigger>
           <SelectContent>
@@ -163,6 +177,11 @@ export function ExpenseForm({
             ))}
           </SelectContent>
         </Select>
+        {categories.length === 0 && (
+          <p className="text-xs text-danger">
+            Tu hogar todavía no tiene categorías. Recargá la página para crearlas.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -177,7 +196,11 @@ export function ExpenseForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label>Quién pagó</Label>
-          <Select value={paidBy} onValueChange={(value) => value && setPaidBy(value)}>
+          <Select
+            items={payerItems}
+            value={paidBy}
+            onValueChange={(value) => value && setPaidBy(value)}
+          >
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
