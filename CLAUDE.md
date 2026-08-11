@@ -7,7 +7,8 @@ Dashboard de finanzas compartidas para dos personas (una pareja que vive junta).
 ## Estado del proyecto
 
 - **Fase 1 (hecha):** setup, auth (email + contraseña), onboarding (crear hogar / unirse con código de invitación), esqueleto de navegación de las 5 pestañas con el diseño visual definido, modo claro/oscuro.
-- **Próximo:** Fase 2 — carga de gastos + split entre los dos.
+- **Fase 2 (hecha):** carga de gastos + split, listado por mes con búsqueda y filtro, edición y borrado, balance entre los dos con settlements en Inicio.
+- **Próximo:** Fase 3 — deploy a Vercel.
 
 Ver el prompt original completo y el detalle de las 6 fases en el historial de la conversación donde se definió el proyecto; el resumen de fases está más abajo.
 
@@ -32,7 +33,8 @@ RLS: todas las tablas filtran por `household_id` a través de `is_household_memb
 ## Convenciones de código
 
 - UI en español (es-AR).
-- Moneda: siempre con `formatCurrency()` de `lib/utils/currency.ts` (formato `$ 12.500`), nunca `Intl.NumberFormat` a mano en componentes.
+- Moneda: siempre con `formatCurrency()` de `lib/utils/currency.ts` (formato `$ 12.500`), nunca `Intl.NumberFormat` a mano en componentes. Para campos donde el usuario tipea un monto, el mismo módulo tiene `formatAmountInput()` / `parseAmountInput()` / `amountToInput()`: el input va como `type="text"` con `inputMode="decimal"` (uno `type="number"` no puede mostrar el punto de miles).
+- `Select` de Base UI: pasarle siempre `items` al Root (`{ value, label }[]`). Sin eso `<SelectValue>` imprime el valor crudo en el trigger — un UUID, o el `"all"` de un filtro — en vez de la etiqueta del `SelectItem`.
 - Colores semánticos definidos en `app/globals.css` / mapeados en `@theme inline`: `success` (verde, a favor), `danger` (rojo, en contra), `warning` (ámbar, presupuesto cerca del límite). Usar las clases `bg-success`, `text-danger`, etc., no colores sueltos.
 - El color e ícono de cada categoría vive en la tabla `categories`, nunca hardcodeado en componentes.
 - Clientes de Supabase: `lib/supabase/server.ts` en Server Components/actions, `lib/supabase/client.ts` en Client Components, `lib/supabase/middleware.ts` para el refresco de sesión (ya conectado en `middleware.ts` de la raíz).

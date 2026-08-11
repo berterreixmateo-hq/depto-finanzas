@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Repo independiente que quedó anidado acá por accidente; no es parte de este proyecto.
+/moneyball
