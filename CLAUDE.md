@@ -28,7 +28,9 @@ Fuente de verdad: `supabase/migrations/0001_init.sql`. Resumen:
 - `recurring_expenses` (definición) + `recurring_expense_instances` (ocurrencia mensual, con `expense_id` que se completa al marcar como pagado y `invoice_url` en Supabase Storage).
 - `shopping_items` — cubre las dos sub-listas de "Listas" via `list_type` (`faltantes` | `super`). Tabla agregada a la publicación `supabase_realtime`.
 
-RLS: todas las tablas filtran por `household_id` a través de `is_household_member(household_id)` (función `security definer`). Excepción intencional: `households` permite SELECT/INSERT a cualquier usuario autenticado, porque el flujo de onboarding necesita poder buscar un hogar por `invite_code` antes de ser miembro. El resto de los datos financieros sí queda estrictamente atrás de la membresía.
+RLS: todas las tablas filtran por `household_id` a través de `is_household_member(household_id)` (función `security definer`), `households` incluida. No hay excepciones: ninguna tabla es legible por un autenticado que no sea miembro.
+
+El onboarding no inserta directo. `create_household()` y `join_household()` (`supabase/migrations/0002_onboarding_rpc.sql`, ambas `security definer`) son el único camino para crear un hogar o unirse a uno, y validan el código de invitación y el tope de dos miembros del lado del servidor. Antes esto se chequeaba solo en el cliente, con `households` legible por cualquiera y una política de insert que no miraba el código: alcanzaba con una cuenta cualquiera y un insert directo contra la API para meterse en un hogar ajeno y leer todos sus datos. Si volvés a tocar el onboarding, no reintroduzcas inserts desde el cliente sobre esas dos tablas.
 
 ## Convenciones de código
 

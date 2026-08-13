@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { generateInviteCode } from "@/lib/utils/invite-code";
 import { DEFAULT_CATEGORIES } from "@/lib/default-categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,11 +40,12 @@ export function OnboardingForm() {
       return;
     }
 
-    const { data: household, error: householdError } = await supabase
-      .from("households")
-      .insert({ name: householdName, invite_code: generateInviteCode() })
-      .select()
-      .single();
+    // El alta pasa por una función security definer: genera el código,
+    // crea el hogar y te agrega como miembro en una sola transacción.
+    const { data: household, error: householdError } = await supabase.rpc(
+      "create_household",
+      { p_name: householdName, p_display_name: displayName },
+    );
 
     if (householdError || !household) {
       toast.error("No pudimos crear el hogar", {
@@ -55,21 +55,11 @@ export function OnboardingForm() {
       return;
     }
 
-    const { error: memberError } = await supabase.from("household_members").insert({
-      household_id: household.id,
-      user_id: user.id,
-      display_name: displayName,
-    });
-
     setLoading(false);
 
-    if (memberError) {
-      toast.error("No pudimos vincularte al hogar", {
-        description: memberError.message,
-      });
-      return;
-    }
-
+    // Recién acá somos miembros, así que la RLS de `categories` nos deja
+    // sembrarlas. Se hace desde el cliente para no duplicar la lista de
+    // DEFAULT_CATEGORIES en SQL.
     const { error: categoriesError } = await supabase.from("categories").insert(
       DEFAULT_CATEGORIES.map((category) => ({
         household_id: household.id,
@@ -104,31 +94,18 @@ export function OnboardingForm() {
       return;
     }
 
-    const { data: household, error: lookupError } = await supabase
-      .from("households")
-      .select()
-      .eq("invite_code", inviteCode.trim().toUpperCase())
-      .single();
-
-    if (lookupError || !household) {
-      toast.error("No encontramos ese código", {
-        description: "Revisá que esté bien escrito",
-      });
-      setLoading(false);
-      return;
-    }
-
-    const { error: memberError } = await supabase.from("household_members").insert({
-      household_id: household.id,
-      user_id: user.id,
-      display_name: displayName,
-    });
+    // El código se valida del lado del servidor: acá ya no podemos —ni
+    // necesitamos— leer hogares ajenos para buscarlo.
+    const { data: household, error: joinError } = await supabase.rpc(
+      "join_household",
+      { p_invite_code: inviteCode, p_display_name: displayName },
+    );
 
     setLoading(false);
 
-    if (memberError) {
+    if (joinError || !household) {
       toast.error("No pudimos unirte al hogar", {
-        description: memberError.message,
+        description: joinError?.message ?? "Revisá que el código esté bien escrito",
       });
       return;
     }

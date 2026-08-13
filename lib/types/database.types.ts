@@ -276,6 +276,18 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      // Definidas en supabase/migrations/0002_onboarding_rpc.sql. Son el único
+      // camino para crear un hogar o unirse a uno: la RLS ya no permite
+      // insertar en `households` / `household_members` desde el cliente.
+      create_household: {
+        Args: { p_name: string; p_display_name: string };
+        Returns: Database["public"]["Tables"]["households"]["Row"];
+      };
+      join_household: {
+        Args: { p_invite_code: string; p_display_name: string };
+        Returns: Database["public"]["Tables"]["households"]["Row"];
+      };
+    };
   };
 }
