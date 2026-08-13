@@ -1,7 +1,6 @@
 import { Home, ShoppingCart } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { EmptyState } from "@/components/shared/empty-state";
-import { ComingSoonButton } from "@/components/shared/coming-soon-button";
+import { ShoppingList } from "@/components/listas/shopping-list";
 import { CotoLink } from "@/components/listas/coto-link";
 
 export default function ListasPage() {
@@ -20,21 +19,24 @@ export default function ListasPage() {
         </TabsList>
 
         <TabsContent value="faltantes" className="pt-4">
-          <EmptyState
+          <ShoppingList
+            listType="faltantes"
             icon={Home}
-            title="Nada anotado todavía"
-            description="Lo que va haciendo falta en la casa, compartido entre los dos."
-            action={<ComingSoonButton phase="Fase 6">Agregar algo</ComingSoonButton>}
+            emptyTitle="Nada anotado todavía"
+            emptyDescription="Lo que va haciendo falta en la casa, compartido entre los dos."
+            placeholder="Ej: lamparita del baño"
           />
         </TabsContent>
 
         <TabsContent value="super" className="flex flex-col gap-4 pt-4">
           <CotoLink />
-          <EmptyState
+          <ShoppingList
+            listType="super"
             icon={ShoppingCart}
-            title="Lista de súper vacía"
-            description="Se actualiza al toque entre los dos mientras están comprando."
-            action={<ComingSoonButton phase="Fase 6">Agregar producto</ComingSoonButton>}
+            emptyTitle="Lista de súper vacía"
+            emptyDescription="Se actualiza al toque entre los dos mientras están comprando."
+            placeholder="Ej: leche"
+            conPrecios
           />
         </TabsContent>
       </Tabs>

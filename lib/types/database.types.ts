@@ -266,6 +266,7 @@ export interface Database {
           name: string;
           quantity: string | null;
           is_checked: boolean;
+          coto_ean: string | null;
           created_by: string;
           created_at: string;
         };
@@ -276,12 +277,31 @@ export interface Database {
           name: string;
           quantity?: string | null;
           is_checked?: boolean;
+          coto_ean?: string | null;
           created_by: string;
           created_at?: string;
         };
         Update: Partial<
           Database["public"]["Tables"]["shopping_items"]["Insert"]
         >;
+        Relationships: [];
+      };
+      coto_links: {
+        Row: {
+          household_id: string;
+          query: string;
+          ean: string;
+          product_name: string;
+          updated_at: string;
+        };
+        Insert: {
+          household_id: string;
+          query: string;
+          ean: string;
+          product_name: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["coto_links"]["Insert"]>;
         Relationships: [];
       };
     };
