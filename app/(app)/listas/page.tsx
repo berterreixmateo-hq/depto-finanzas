@@ -1,4 +1,3 @@
-import { Home, ShoppingCart } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ShoppingList } from "@/components/listas/shopping-list";
 import { CotoLink } from "@/components/listas/coto-link";
@@ -21,7 +20,6 @@ export default function ListasPage() {
         <TabsContent value="faltantes" className="pt-4">
           <ShoppingList
             listType="faltantes"
-            icon={Home}
             emptyTitle="Nada anotado todavía"
             emptyDescription="Lo que va haciendo falta en la casa, compartido entre los dos."
             placeholder="Ej: lamparita del baño"
@@ -32,7 +30,6 @@ export default function ListasPage() {
           <CotoLink />
           <ShoppingList
             listType="super"
-            icon={ShoppingCart}
             emptyTitle="Lista de súper vacía"
             emptyDescription="Se actualiza al toque entre los dos mientras están comprando."
             placeholder="Ej: leche"

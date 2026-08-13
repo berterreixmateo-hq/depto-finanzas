@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Plus, Search, Trash2 } from "lucide-react";
+import { Home, Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useHousehold } from "@/lib/household-context";
@@ -17,22 +17,31 @@ import type { LucideIcon } from "lucide-react";
 
 type ShoppingItem = Database["public"]["Tables"]["shopping_items"]["Row"];
 
+/**
+ * El icono se elige acá y no llega por prop: un componente es una función y
+ * no se puede serializar desde un Server Component hacia uno cliente.
+ */
+const ICONOS: Record<ShoppingListType, LucideIcon> = {
+  faltantes: Home,
+  super: ShoppingCart,
+};
+
 export function ShoppingList({
   listType,
-  icon,
   emptyTitle,
   emptyDescription,
   placeholder,
   conPrecios = false,
 }: {
   listType: ShoppingListType;
-  icon: LucideIcon;
   emptyTitle: string;
   emptyDescription: string;
   placeholder: string;
   /** Solo la lista del súper consulta Coto. */
   conPrecios?: boolean;
 }) {
+  const icon = ICONOS[listType];
+
   const supabase = createClient();
   const { householdId, userId } = useHousehold();
 
