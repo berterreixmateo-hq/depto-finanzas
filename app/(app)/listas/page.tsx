@@ -2,6 +2,7 @@ import { Home, ShoppingCart } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ComingSoonButton } from "@/components/shared/coming-soon-button";
+import { CotoLink } from "@/components/listas/coto-link";
 
 export default function ListasPage() {
   return (
@@ -27,7 +28,8 @@ export default function ListasPage() {
           />
         </TabsContent>
 
-        <TabsContent value="super" className="pt-4">
+        <TabsContent value="super" className="flex flex-col gap-4 pt-4">
+          <CotoLink />
           <EmptyState
             icon={ShoppingCart}
             title="Lista de súper vacía"

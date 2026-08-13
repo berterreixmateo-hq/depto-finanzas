@@ -29,6 +29,7 @@ import type {
   ServicioDelMes,
 } from "@/lib/types/recurring";
 import { formatCurrency } from "@/lib/utils/currency";
+import { cuotaLabel, FREQUENCY_LABELS, ocurrenciaEnMes } from "@/lib/utils/recurrence";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -95,7 +96,11 @@ export function FijosView() {
       return;
     }
 
-    const lista = (definiciones ?? []) as RecurringWithCategory[];
+    // Un bimestral no cae todos los meses, y una serie de cuotas se termina.
+    // Lo que no corresponde a este mes no se lista ni genera cuota.
+    const lista = ((definiciones ?? []) as RecurringWithCategory[]).filter(
+      (servicio) => ocurrenciaEnMes(servicio, monthDate).aplica,
+    );
 
     if (lista.length === 0) {
       setServicios([]);
@@ -303,8 +308,11 @@ export function FijosView() {
                             )}
                           </p>
                           <p className="truncate text-xs text-muted-foreground">
-                            Vence el {servicio.day_of_month} ·{" "}
-                            {formatCurrency(servicio.estimated_amount)}
+                            {cuotaLabel(ocurrenciaEnMes(servicio, monthDate)) ??
+                              (servicio.frequency === "mensual"
+                                ? `Vence el ${servicio.day_of_month}`
+                                : `${FREQUENCY_LABELS[servicio.frequency]} · vence el ${servicio.day_of_month}`)}{" "}
+                            · {formatCurrency(servicio.estimated_amount)}
                             {pagado && " · pagado"}
                           </p>
                         </div>

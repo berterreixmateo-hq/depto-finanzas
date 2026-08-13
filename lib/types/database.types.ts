@@ -187,6 +187,9 @@ export interface Database {
           active: boolean;
           payment_url: string | null;
           notes: string | null;
+          frequency: "mensual" | "bimestral" | "trimestral" | "semestral" | "anual";
+          start_month: string;
+          installments_total: number | null;
           created_at: string;
         };
         Insert: {
@@ -199,6 +202,9 @@ export interface Database {
           active?: boolean;
           payment_url?: string | null;
           notes?: string | null;
+          frequency?: "mensual" | "bimestral" | "trimestral" | "semestral" | "anual";
+          start_month?: string;
+          installments_total?: number | null;
           created_at?: string;
         };
         Update: Partial<
