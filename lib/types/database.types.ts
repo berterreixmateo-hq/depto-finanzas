@@ -185,6 +185,8 @@ export interface Database {
           estimated_amount: number;
           day_of_month: number;
           active: boolean;
+          payment_url: string | null;
+          notes: string | null;
           created_at: string;
         };
         Insert: {
@@ -195,6 +197,8 @@ export interface Database {
           estimated_amount: number;
           day_of_month: number;
           active?: boolean;
+          payment_url?: string | null;
+          notes?: string | null;
           created_at?: string;
         };
         Update: Partial<

@@ -51,6 +51,13 @@ El onboarding no inserta directo. `create_household()` y `join_household()` (`su
 - Presupuestos con historial mensual real (no un valor único).
 - Las instancias de gastos fijos del mes se generan de forma perezosa cuando alguien abre la pestaña Fijos (sin cron/Edge Function). Suficiente para 2 usuarios activos; si se nota que quedan meses sin generar, pasar a un cron.
 
+## Proceso de trabajo
+
+Ningún cambio de código queda sin commitear y pushear. `main` autodeploya a Vercel, con dos salvedades antes de pushear:
+
+- Si el cambio depende de una migración de `supabase/migrations/` que todavía no se corrió en el SQL Editor, aplicarla primero. Pushear antes rompe producción.
+- El push usa SSH. Si el agente no tiene la clave, corre `ssh-add --apple-use-keychain ~/.ssh/id_ed25519` una vez.
+
 ## Fases
 
 1. ✅ Setup, auth, esqueleto de navegación con diseño final
