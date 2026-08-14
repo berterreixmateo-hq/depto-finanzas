@@ -48,6 +48,8 @@ function dayLabel(dateStr: string) {
 }
 
 function splitLabel(expense: ExpenseWithCategory, userId: string, partnerName: string | null) {
+  if (expense.settled_on_payment) return "Pagaron los dos · sin deuda";
+
   const payerIsMe = expense.paid_by === userId;
   const payer = payerIsMe ? "Vos" : partnerName ?? "Tu pareja";
   if (expense.split_type === "only_payer") return `Pagó ${payer} · solo suyo`;

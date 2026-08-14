@@ -42,6 +42,7 @@ type BalanceExpense = {
   expense_date: string;
   paid_by: string;
   payer_share_percentage: number;
+  settled_on_payment: boolean;
 };
 type Settlement = { amount: number; settled_by: string };
 
@@ -69,7 +70,7 @@ export function InicioView() {
     const [allExpenses, settlements, recentExpenses] = await Promise.all([
       supabase
         .from("expenses")
-        .select("amount, expense_date, paid_by, payer_share_percentage")
+        .select("amount, expense_date, paid_by, payer_share_percentage, settled_on_payment")
         .eq("household_id", householdId),
       supabase
         .from("settlements")

@@ -124,6 +124,8 @@ export interface Database {
           payer_share_percentage: number;
           split_type: SplitType;
           source: ExpenseSource;
+          /** Cada uno puso su parte al pagar: el gasto no genera deuda. */
+          settled_on_payment: boolean;
           merchant: string | null;
           recurring_instance_id: string | null;
           created_by: string;
@@ -141,6 +143,7 @@ export interface Database {
           payer_share_percentage?: number;
           split_type?: SplitType;
           source?: ExpenseSource;
+          settled_on_payment?: boolean;
           merchant?: string | null;
           recurring_instance_id?: string | null;
           created_by: string;

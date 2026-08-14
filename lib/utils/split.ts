@@ -3,7 +3,7 @@ import type { Database } from "@/lib/types/database.types";
 type ExpenseRow = Pick<
   Database["public"]["Tables"]["expenses"]["Row"],
   "amount" | "paid_by" | "payer_share_percentage"
->;
+> & { settled_on_payment?: boolean };
 type SettlementRow = Pick<
   Database["public"]["Tables"]["settlements"]["Row"],
   "amount" | "settled_by"
@@ -40,6 +40,10 @@ export function computeBalance(
   let balance = 0;
 
   for (const expense of expenses) {
+    // Cada uno puso su parte al pagar: no hubo deuda que registrar. No se
+    // compensa con un settlement porque no hubo nada que saldar después.
+    if (expense.settled_on_payment) continue;
+
     const otherShare = (expense.amount * (100 - expense.payer_share_percentage)) / 100;
     if (expense.paid_by === currentUserId) {
       balance -= otherShare; // el otro me debe su parte

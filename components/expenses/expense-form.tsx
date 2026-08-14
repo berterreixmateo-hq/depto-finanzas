@@ -44,7 +44,9 @@ export function ExpenseForm({
     expense?.category_id ?? categories[0]?.id ?? "",
   );
   const [date, setDate] = useState(expense?.expense_date ?? todayLocal());
-  const [paidBy, setPaidBy] = useState(expense?.paid_by ?? userId);
+  const [paidBy, setPaidBy] = useState(
+    expense?.settled_on_payment ? "ambos" : (expense?.paid_by ?? userId),
+  );
   const [splitType, setSplitType] = useState<SplitType>(
     expense?.split_type ?? "50_50",
   );
@@ -55,7 +57,13 @@ export function ExpenseForm({
   );
   const [saving, setSaving] = useState(false);
 
-  const payerLabel = paidBy === userId ? "mío" : `de ${partnerName}`;
+  // Centinela: no es un uuid, así que nunca choca con un user_id real.
+  const AMBOS = "ambos";
+  const ambos = paidBy === AMBOS;
+
+  // Con "pagamos los dos" el porcentaje se refiere a quien carga el gasto, así
+  // que la etiqueta del toggle es la misma que si hubiera pagado él.
+  const payerLabel = ambos || paidBy === userId ? "mío" : `de ${partnerName}`;
 
   // Base UI necesita `items` en el Root: sin eso <SelectValue> imprime el valor
   // crudo (el UUID) en vez de la etiqueta del ítem elegido.
@@ -66,6 +74,7 @@ export function ExpenseForm({
   const payerItems = [
     { value: userId, label: `Yo (${displayName})` },
     ...(partnerId ? [{ value: partnerId, label: partnerName ?? "Mi pareja" }] : []),
+    ...(partnerId ? [{ value: AMBOS, label: "Pagamos los dos" }] : []),
   ];
 
   function payerSharePercentage(): number {
@@ -100,9 +109,13 @@ export function ExpenseForm({
       description: description.trim(),
       amount: amountValue,
       expense_date: date,
-      paid_by: paidBy,
+      // `paid_by` sigue siendo la persona a la que se refiere el porcentaje,
+      // porque de eso depende cuánto consumió cada uno. Con "pagamos los dos"
+      // eso es quien carga el gasto; lo que cambia es que no hay deuda.
+      paid_by: ambos ? userId : paidBy,
       payer_share_percentage: payerSharePercentage(),
       split_type: splitType,
+      settled_on_payment: ambos,
       created_by: userId,
     };
 
@@ -209,8 +222,14 @@ export function ExpenseForm({
               {partnerId && (
                 <SelectItem value={partnerId}>{partnerName}</SelectItem>
               )}
+              {partnerId && <SelectItem value={AMBOS}>Pagamos los dos</SelectItem>}
             </SelectContent>
           </Select>
+          {ambos && (
+            <p className="text-xs text-muted-foreground">
+              Cada uno puso su parte: no genera deuda entre ustedes.
+            </p>
+          )}
         </div>
       </div>
 
