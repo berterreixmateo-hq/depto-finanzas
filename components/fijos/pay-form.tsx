@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { format } from "date-fns";
+import { Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useHousehold } from "@/lib/household-context";
 import { notifyExpensesChanged } from "@/lib/expenses-bus";
 import type { ServicioDelMes } from "@/lib/types/recurring";
 import { amountToInput, formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
+import {
+  BUCKET_FACTURAS,
+  MAX_FACTURA_BYTES,
+  esTipoFacturaValido,
+  rutaFactura,
+} from "@/lib/facturas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,7 +44,9 @@ export function PayForm({
     amountToInput(servicio.instance?.estimated_amount ?? servicio.estimated_amount),
   );
   const [paidBy, setPaidBy] = useState(userId);
+  const [factura, setFactura] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const facturaRef = useRef<HTMLInputElement>(null);
 
   const payerItems = [
     { value: userId, label: `Yo (${displayName})` },
@@ -101,6 +110,26 @@ export function PayForm({
       return;
     }
 
+    // La factura va al final y no bloquea: el pago ya quedó registrado, y si
+    // la subida falla se puede adjuntar después desde la lista.
+    if (factura) {
+      const ruta = rutaFactura(householdId, servicio.instance.id, factura.name);
+      const { error: subida } = await supabase.storage
+        .from(BUCKET_FACTURAS)
+        .upload(ruta, factura, { upsert: true, contentType: factura.type });
+
+      if (subida) {
+        toast.error("El pago se registró, pero la factura no se subió", {
+          description: subida.message,
+        });
+      } else {
+        await supabase
+          .from("recurring_expense_instances")
+          .update({ invoice_url: ruta })
+          .eq("id", servicio.instance.id);
+      }
+    }
+
     toast.success(`${servicio.name} marcado como pagado`);
     notifyExpensesChanged();
     onSuccess();
@@ -148,6 +177,62 @@ export function PayForm({
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">Se divide 50/50 entre los dos.</p>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Factura</Label>
+        <input
+          ref={facturaRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,application/pdf"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            if (!esTipoFacturaValido(f.type)) {
+              toast.error("La factura tiene que ser JPG, PNG, WebP o PDF");
+              return;
+            }
+            if (f.size > MAX_FACTURA_BYTES) {
+              toast.error("La factura pesa más de 10MB");
+              return;
+            }
+            setFactura(f);
+          }}
+        />
+        {factura ? (
+          <div className="flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-sm">
+            <Paperclip className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1 truncate">{factura.name}</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-7 shrink-0 text-muted-foreground"
+              aria-label="Quitar la factura"
+              onClick={() => {
+                setFactura(null);
+                if (facturaRef.current) facturaRef.current.value = "";
+              }}
+            >
+              <X className="size-3.5" />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => facturaRef.current?.click()}
+          >
+            <Paperclip className="size-4" />
+            Adjuntar factura
+          </Button>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Opcional. Queda guardada en privado: para verla se genera un enlace que
+          vence, así no queda una URL pública dando vueltas.
+        </p>
       </div>
 
       <div className="flex gap-3 pt-2">

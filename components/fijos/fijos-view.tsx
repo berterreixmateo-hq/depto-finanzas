@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CalendarClock,
   Check,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Paperclip,
   Pencil,
   StickyNote,
   Trash2,
@@ -30,6 +31,13 @@ import type {
 } from "@/lib/types/recurring";
 import { formatCurrency } from "@/lib/utils/currency";
 import { cuotaLabel, FREQUENCY_LABELS, ocurrenciaEnMes } from "@/lib/utils/recurrence";
+import {
+  BUCKET_FACTURAS,
+  MAX_FACTURA_BYTES,
+  esTipoFacturaValido,
+  rutaFactura,
+  urlFirmada,
+} from "@/lib/facturas";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -77,6 +85,8 @@ export function FijosView() {
   const [editTarget, setEditTarget] = useState<RecurringExpense | null>(null);
   const [payTarget, setPayTarget] = useState<ServicioDelMes | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ServicioDelMes | null>(null);
+  const [facturaTarget, setFacturaTarget] = useState<ServicioDelMes | null>(null);
+  const facturaRef = useRef<HTMLInputElement>(null);
 
   const monthKey = format(monthDate, "yyyy-MM-01");
 
@@ -175,6 +185,54 @@ export function FijosView() {
   }, [fetchServicios]);
 
   useEffect(() => onExpensesChanged(fetchServicios), [fetchServicios]);
+
+  async function verFactura(ruta: string) {
+    // La pestaña se abre antes del await: si se abriera después, el navegador
+    // la trataría como popup no pedido y la bloquearía.
+    const tab = window.open("", "_blank");
+    const url = await urlFirmada(supabase, ruta);
+    if (!url) {
+      tab?.close();
+      toast.error("No pudimos abrir la factura");
+      return;
+    }
+    if (tab) tab.location.href = url;
+  }
+
+  async function subirFactura(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    const instancia = facturaTarget?.instance;
+    e.target.value = "";
+    if (!file || !instancia) return;
+
+    if (!esTipoFacturaValido(file.type)) {
+      toast.error("La factura tiene que ser JPG, PNG, WebP o PDF");
+      return;
+    }
+    if (file.size > MAX_FACTURA_BYTES) {
+      toast.error("La factura pesa más de 10MB");
+      return;
+    }
+
+    const ruta = rutaFactura(householdId, instancia.id, file.name);
+    const { error } = await supabase.storage
+      .from(BUCKET_FACTURAS)
+      .upload(ruta, file, { upsert: true, contentType: file.type });
+
+    if (error) {
+      toast.error("No pudimos subir la factura", { description: error.message });
+      return;
+    }
+
+    await supabase
+      .from("recurring_expense_instances")
+      .update({ invoice_url: ruta })
+      .eq("id", instancia.id);
+
+    toast.success("Factura adjuntada");
+    setFacturaTarget(null);
+    fetchServicios();
+  }
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -329,6 +387,34 @@ export function FijosView() {
                           </a>
                         )}
 
+                        {pagado && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`size-8 shrink-0 ${
+                              servicio.instance?.invoice_url
+                                ? "text-foreground"
+                                : "text-muted-foreground"
+                            }`}
+                            aria-label={
+                              servicio.instance?.invoice_url
+                                ? `Ver factura de ${servicio.name}`
+                                : `Adjuntar factura de ${servicio.name}`
+                            }
+                            onClick={() => {
+                              const ruta = servicio.instance?.invoice_url;
+                              if (ruta) {
+                                verFactura(ruta);
+                              } else {
+                                setFacturaTarget(servicio);
+                                facturaRef.current?.click();
+                              }
+                            }}
+                          >
+                            <Paperclip className="size-3.5" />
+                          </Button>
+                        )}
+
                         {pagado ? (
                           <span
                             className="flex size-8 shrink-0 items-center justify-center text-success"
@@ -375,6 +461,14 @@ export function FijosView() {
           </div>
         </>
       )}
+
+      <input
+        ref={facturaRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,application/pdf"
+        className="hidden"
+        onChange={subirFactura}
+      />
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
