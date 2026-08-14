@@ -28,6 +28,9 @@ Fuente de verdad: `supabase/migrations/0001_init.sql`. Resumen:
 - `settlements` — registra cuando se saldó el balance entre los dos.
 - `recurring_expenses` (definición) + `recurring_expense_instances` (ocurrencia mensual, con `expense_id` que se completa al marcar como pagado y `invoice_url` en Supabase Storage).
 - `shopping_items` — cubre las dos sub-listas de "Listas" via `list_type` (`faltantes` | `super`). Tabla agregada a la publicación `supabase_realtime`.
+- `incomes` — ingreso por persona, con el mismo modelo histórico que `budgets`. Los dos miembros leen ambos; cada uno solo edita el propio (la RLS separa lectura de escritura).
+- `expense_items` — detalle de lo comprado, de un ticket escaneado o de una compra cerrada desde la lista. `amount` es nullable a propósito: null es "no sabemos cuánto costó", distinto de 0.
+- `coto_links` — vínculo aprendido entre el texto que escribe una persona ("leche") y un producto de Coto por EAN, para no volver a preguntar.
 
 RLS: todas las tablas filtran por `household_id` a través de `is_household_member(household_id)` (función `security definer`), `households` incluida. No hay excepciones: ninguna tabla es legible por un autenticado que no sea miembro.
 
@@ -43,7 +46,7 @@ El onboarding no inserta directo. `create_household()` y `join_household()` (`su
 - Clientes de Supabase: `lib/supabase/server.ts` en Server Components/actions, `lib/supabase/client.ts` en Client Components, `lib/supabase/middleware.ts` para el refresco de sesión (ya conectado en `middleware.ts` de la raíz).
 - Tipos de la base en `lib/types/database.types.ts`, escritos a mano por ahora (incluyen `Relationships` porque el `Database` genérico de esta versión de `@supabase/supabase-js` lo exige). Reemplazar con `supabase gen types typescript` en cuanto el proyecto esté linkeado a la CLI.
 - Estados vacíos: componente compartido `components/shared/empty-state.tsx`.
-- Funcionalidad todavía no conectada: usar `components/shared/coming-soon-button.tsx` (dispara un toast "se habilita en la Fase X") en vez de dejar un botón sin acción.
+- `components/shared/coming-soon-button.tsx` existe pero ya no se usa: no queda funcionalidad sin conectar. No reintroducirlo — si algo no está listo, no se muestra el botón.
 - El balance entre los dos nunca se persiste como número: se recalcula siempre a partir de `expenses` + `settlements` con `lib/utils/split.ts`.
 
 ## Decisiones de diseño (con trade-offs ya conversados)
@@ -62,11 +65,13 @@ Ningún cambio de código queda sin commitear y pushear. `main` autodeploya a Ve
 ## Fases
 
 1. ✅ Setup, auth, esqueleto de navegación con diseño final
-2. Gastos + split entre los dos
-3. Deploy a Vercel
-4. Gastos fijos + facturas (Supabase Storage)
-5. Presupuestos + gráficos de Inicio
-6. Listas (faltantes de la casa + súper, con Realtime)
+2. ✅ Gastos + split entre los dos
+3. ✅ Deploy a Vercel
+4. ⚠️ Gastos fijos (hecho) + facturas en Supabase Storage (pendiente)
+5. ✅ Presupuestos + gráficos de Inicio
+6. ✅ Listas (faltantes de la casa + súper, con Realtime)
+
+Lo único del plan original que quedó sin hacer es la parte de **facturas** de la Fase 4: `recurring_expense_instances.invoice_url` está en el esquema y en los tipos, pero nada la escribe ni la lee.
 
 ## Notas del entorno
 
