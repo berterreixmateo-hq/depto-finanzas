@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Home, Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
+import { Check, Home, Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useHousehold } from "@/lib/household-context";
@@ -11,6 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PrecioDialog } from "@/components/listas/precio-dialog";
+import { CerrarCompraForm, type ItemComprado } from "@/components/listas/cerrar-compra-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils/currency";
 import { normalizarQuery } from "@/lib/utils/normalizar";
 import type { LucideIcon } from "lucide-react";
@@ -48,10 +55,14 @@ export function ShoppingList({
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [nuevo, setNuevo] = useState("");
+  // Texto libre a propósito: "2", "1 kg" y "500g" son todos válidos y la
+  // columna es text. Forzar un número obligaría a elegir unidad.
+  const [cantidad, setCantidad] = useState("");
   const [agregando, setAgregando] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [precios, setPrecios] = useState<Record<string, number | null>>({});
   const [precioTarget, setPrecioTarget] = useState<ShoppingItem | null>(null);
+  const [cerrarOpen, setCerrarOpen] = useState(false);
 
   const fetchItems = useCallback(async () => {
     const { data, error } = await supabase
@@ -137,7 +148,9 @@ export function ShoppingList({
     if (!name) return;
 
     setAgregando(true);
+    const cant = cantidad.trim();
     setNuevo("");
+    setCantidad("");
 
     // Si ya elegimos alguna vez qué producto es "leche", el ítem nace
     // vinculado y el precio aparece solo.
@@ -156,6 +169,7 @@ export function ShoppingList({
       household_id: householdId,
       list_type: listType,
       name,
+      quantity: cant || null,
       coto_ean: cotoEan,
       created_by: userId,
     });
@@ -166,6 +180,7 @@ export function ShoppingList({
     if (error) {
       toast.error("No pudimos agregarlo", { description: error.message });
       setNuevo(name);
+      setCantidad(cant);
       return;
     }
     fetchItems();
@@ -221,6 +236,15 @@ export function ShoppingList({
 
   const tachados = items.filter((i) => i.is_checked).length;
 
+  const comprados: ItemComprado[] = items
+    .filter((i) => i.is_checked)
+    .map((i) => ({
+      id: i.id,
+      name: i.name,
+      quantity: i.quantity,
+      precio: i.coto_ean ? (precios[i.coto_ean] ?? null) : null,
+    }));
+
   // Solo suma lo que tiene precio conocido; los que faltan se cuentan aparte
   // para no dar por bueno un total que en realidad está incompleto.
   const conPrecioConocido = items.filter(
@@ -240,6 +264,13 @@ export function ShoppingList({
           value={nuevo}
           onChange={(e) => setNuevo(e.target.value)}
           className="flex-1"
+        />
+        <Input
+          placeholder="Cant."
+          aria-label="Cantidad"
+          value={cantidad}
+          onChange={(e) => setCantidad(e.target.value)}
+          className="w-20 shrink-0"
         />
         <Button type="submit" size="icon" disabled={agregando || !nuevo.trim()}>
           <Plus className="size-4" />
@@ -333,6 +364,13 @@ export function ShoppingList({
             </div>
           )}
 
+          {conPrecios && tachados > 0 && (
+            <Button size="sm" onClick={() => setCerrarOpen(true)}>
+              <Check className="size-4" />
+              Terminé la compra
+            </Button>
+          )}
+
           {tachados > 0 && (
             <Button variant="outline" size="sm" onClick={limpiarTachados}>
               Borrar {tachados} tachado{tachados === 1 ? "" : "s"}
@@ -340,6 +378,22 @@ export function ShoppingList({
           )}
         </>
       )}
+
+      <Dialog open={cerrarOpen} onOpenChange={setCerrarOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cerrar la compra</DialogTitle>
+          </DialogHeader>
+          <CerrarCompraForm
+            items={comprados}
+            onSuccess={() => {
+              setCerrarOpen(false);
+              fetchItems();
+            }}
+            onCancel={() => setCerrarOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       {precioTarget && (
         <PrecioDialog

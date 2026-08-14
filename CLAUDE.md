@@ -7,8 +7,9 @@ Dashboard de finanzas compartidas para dos personas (una pareja que vive junta).
 ## Estado del proyecto
 
 - **Fase 1 (hecha):** setup, auth (email + contraseña), onboarding (crear hogar / unirse con código de invitación), esqueleto de navegación de las 5 pestañas con el diseño visual definido, modo claro/oscuro.
-- **Fase 2 (hecha):** carga de gastos + split, listado por mes con búsqueda y filtro, edición y borrado, balance entre los dos con settlements en Inicio.
-- **Próximo:** Fase 3 — deploy a Vercel.
+- **Fases 2 a 6 (hechas):** gastos con split, deploy en Vercel, fijos con link de pago y cuotas, presupuestos e ingresos con gráficos, y listas compartidas con Realtime.
+- Extras fuera del plan original: lector de tickets con OCR (Claude Haiku 4.5), precios de Coto sobre la lista del súper, y cierre de compra que convierte la lista en gasto.
+- **No quedan `ComingSoonButton` en el proyecto.**
 
 Ver el prompt original completo y el detalle de las 6 fases en el historial de la conversación donde se definió el proyecto; el resumen de fases está más abajo.
 

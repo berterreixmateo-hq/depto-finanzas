@@ -318,7 +318,8 @@ export interface Database {
           name: string;
           quantity: number | null;
           unit_price: number | null;
-          amount: number;
+          /** null = se compró pero no sabemos cuánto costó. */
+          amount: number | null;
           created_at: string;
         };
         Insert: {
@@ -328,7 +329,7 @@ export interface Database {
           name: string;
           quantity?: number | null;
           unit_price?: number | null;
-          amount: number;
+          amount?: number | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["expense_items"]["Insert"]>;
