@@ -36,9 +36,13 @@ interface Fila {
 }
 
 /**
- * Barra de progreso contra un tope. El relleno lleva la severidad —color de la
- * categoría, ámbar al 80%, rojo al pasarse— y la pista es el mismo color a baja
- * opacidad, para que el estado se lea a lo largo de toda la barra.
+ * Barra de progreso contra un tope. El relleno lleva **solo** la severidad:
+ * neutro mientras alcanza, ámbar al 80%, rojo al pasarse.
+ *
+ * No lleva el color de la categoría, aunque sea tentador: Servicios es ámbar y
+ * su barra al 65% se veía igual que una en alerta al 89%. Cuando el relleno
+ * compite entre identidad y estado, gana la identidad y el aviso deja de
+ * avisar. La identidad la carga el puntito al lado del nombre.
  */
 function Medidor({ fila }: { fila: Fila }) {
   const tope = fila.budget ?? 0;
@@ -50,7 +54,7 @@ function Medidor({ fila }: { fila: Fila }) {
       ? "var(--color-danger)"
       : ratio >= 0.8
         ? "var(--color-warning)"
-        : fila.color;
+        : "var(--color-primary)";
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -68,9 +72,8 @@ function Medidor({ fila }: { fila: Fila }) {
       </div>
       <div
         className="h-2 w-full overflow-hidden rounded-full"
-        // La pista es el mismo color de la categoría al 15%: el estado se lee a
-        // lo largo de toda la barra, no solo en la parte llena.
-        style={{ backgroundColor: `${fila.color}26` }}
+        // Pista neutra: el color aparece solo cuando hay algo que mirar.
+        style={{ backgroundColor: "var(--color-muted)" }}
         role="progressbar"
         aria-valuenow={Math.round(ratio * 100)}
         aria-valuemin={0}

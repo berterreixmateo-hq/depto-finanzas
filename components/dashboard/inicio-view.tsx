@@ -5,9 +5,7 @@ import Link from "next/link";
 import {
   ArrowDown,
   ArrowUp,
-  BarChart3,
   PiggyBank,
-  PieChart,
   Receipt,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
@@ -25,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ExpenseDialog } from "@/components/expenses/expense-dialog";
 import { MonthSummary } from "@/components/dashboard/month-summary";
+import { TrendChart } from "@/components/dashboard/trend-chart";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -213,20 +212,9 @@ export function InicioView() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <EmptyState
-          icon={PieChart}
-          title="Gastos por categoría"
-          description="Llega en la Fase 5, con los gráficos del inicio."
-        />
-        <EmptyState
-          icon={BarChart3}
-          title="Últimos 6 meses"
-          description="Llega en la Fase 5, con los gráficos del inicio."
-        />
-      </div>
-
       <MonthSummary />
+
+      <TrendChart />
 
       <div className="flex flex-col gap-3">
         <p className="text-sm font-medium text-muted-foreground">Gastos recientes</p>

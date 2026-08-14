@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Copy, LogOut, Tag } from "lucide-react";
+import { Copy, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { useHousehold } from "@/lib/household-context";
 import { createClient } from "@/lib/supabase/client";
@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
-import { EmptyState } from "@/components/shared/empty-state";
-import { ComingSoonButton } from "@/components/shared/coming-soon-button";
+import { CategoriesSection } from "@/components/settings/categories-section";
 import { BudgetsSection } from "@/components/settings/budgets-section";
 import { IncomeSection } from "@/components/settings/income-section";
 
@@ -75,12 +74,7 @@ export function AjustesContent() {
 
       <div className="flex flex-col gap-3">
         <p className="text-sm font-medium text-muted-foreground">Categorías</p>
-        <EmptyState
-          icon={Tag}
-          title="Categorías por defecto"
-          description="Vas a poder crear, renombrar y elegir color e ícono para cada una."
-          action={<ComingSoonButton phase="Fase 5">Gestionar categorías</ComingSoonButton>}
-        />
+        <CategoriesSection />
       </div>
 
       <div className="flex flex-col gap-3">
