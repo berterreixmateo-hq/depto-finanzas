@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Pencil, Receipt, Search, Trash2 } from "lucide-react";
+import { Camera, ChevronLeft, ChevronRight, Pencil, Receipt, Search, Trash2 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, addMonths, isToday, isYesterday } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
@@ -32,6 +32,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ExpenseDialog } from "@/components/expenses/expense-dialog";
+import { TicketForm } from "@/components/expenses/ticket-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function dayLabel(dateStr: string) {
   const date = new Date(`${dateStr}T00:00:00`);
@@ -59,6 +66,7 @@ export function ExpensesView() {
   const [expenses, setExpenses] = useState<ExpenseWithCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
+  const [ticketOpen, setTicketOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ExpenseWithCategory | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ExpenseWithCategory | null>(null);
 
@@ -131,9 +139,15 @@ export function ExpensesView() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Gastos</h1>
-        <Button size="sm" onClick={() => setAddOpen(true)}>
-          Cargar gasto
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setTicketOpen(true)}>
+            <Camera className="size-3.5" />
+            Ticket
+          </Button>
+          <Button size="sm" onClick={() => setAddOpen(true)}>
+            Cargar gasto
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center justify-between">
@@ -259,6 +273,18 @@ export function ExpensesView() {
           ))}
         </div>
       )}
+
+      <Dialog open={ticketOpen} onOpenChange={setTicketOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cargar desde un ticket</DialogTitle>
+          </DialogHeader>
+          <TicketForm
+            onSuccess={() => setTicketOpen(false)}
+            onCancel={() => setTicketOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       <ExpenseDialog open={addOpen} onOpenChange={setAddOpen} />
       <ExpenseDialog

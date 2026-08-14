@@ -5,7 +5,7 @@
  */
 
 export type SplitType = "50_50" | "custom" | "only_payer";
-export type ExpenseSource = "manual" | "recurring" | "shopping";
+export type ExpenseSource = "manual" | "recurring" | "shopping" | "ticket";
 export type RecurringStatus = "pending" | "paid";
 export type ShoppingListType = "faltantes" | "super";
 
@@ -124,6 +124,7 @@ export interface Database {
           payer_share_percentage: number;
           split_type: SplitType;
           source: ExpenseSource;
+          merchant: string | null;
           recurring_instance_id: string | null;
           created_by: string;
           created_at: string;
@@ -140,6 +141,7 @@ export interface Database {
           payer_share_percentage?: number;
           split_type?: SplitType;
           source?: ExpenseSource;
+          merchant?: string | null;
           recurring_instance_id?: string | null;
           created_by: string;
           created_at?: string;
@@ -284,6 +286,30 @@ export interface Database {
         Update: Partial<
           Database["public"]["Tables"]["shopping_items"]["Insert"]
         >;
+        Relationships: [];
+      };
+      expense_items: {
+        Row: {
+          id: string;
+          expense_id: string;
+          household_id: string;
+          name: string;
+          quantity: number | null;
+          unit_price: number | null;
+          amount: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          expense_id: string;
+          household_id: string;
+          name: string;
+          quantity?: number | null;
+          unit_price?: number | null;
+          amount: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["expense_items"]["Insert"]>;
         Relationships: [];
       };
       coto_links: {
