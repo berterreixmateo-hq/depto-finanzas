@@ -288,6 +288,28 @@ export interface Database {
         >;
         Relationships: [];
       };
+      incomes: {
+        Row: {
+          id: string;
+          household_id: string;
+          user_id: string;
+          effective_month: string;
+          amount: number;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          user_id: string;
+          effective_month: string;
+          amount: number;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["incomes"]["Insert"]>;
+        Relationships: [];
+      };
       expense_items: {
         Row: {
           id: string;

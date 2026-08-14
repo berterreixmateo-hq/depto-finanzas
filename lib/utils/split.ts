@@ -10,6 +10,23 @@ type SettlementRow = Pick<
 >;
 
 /**
+ * Cuánto de un gasto le corresponde a una persona, independientemente de
+ * quién puso la plata. Es lo que esa persona consumió: la base para "cuánto
+ * gastaste este mes" y, contra el ingreso, para el ahorro.
+ *
+ * No confundir con quién pagó: si uno adelanta el súper de los dos, gastó el
+ * 50% aunque haya salido todo de su cuenta. Esa diferencia la resuelve el
+ * balance, no esto.
+ */
+export function shareOf(expense: ExpenseRow, userId: string): number {
+  const pct =
+    expense.paid_by === userId
+      ? expense.payer_share_percentage
+      : 100 - expense.payer_share_percentage;
+  return (Number(expense.amount) * Number(pct)) / 100;
+}
+
+/**
  * Devuelve cuánto le debe currentUserId al otro miembro (positivo = yo debo,
  * negativo = me deben). Cada gasto reparte el monto entre paid_by (según
  * payer_share_percentage) y el resto queda a cargo del otro miembro.

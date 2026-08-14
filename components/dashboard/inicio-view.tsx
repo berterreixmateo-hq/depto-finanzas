@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ExpenseDialog } from "@/components/expenses/expense-dialog";
+import { MonthSummary } from "@/components/dashboard/month-summary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -224,6 +225,8 @@ export function InicioView() {
           description="Llega en la Fase 5, con los gráficos del inicio."
         />
       </div>
+
+      <MonthSummary />
 
       <div className="flex flex-col gap-3">
         <p className="text-sm font-medium text-muted-foreground">Gastos recientes</p>

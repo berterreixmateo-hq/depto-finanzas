@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Copy, LogOut, Tag, Wallet } from "lucide-react";
+import { Copy, LogOut, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { useHousehold } from "@/lib/household-context";
 import { createClient } from "@/lib/supabase/client";
@@ -12,6 +12,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ComingSoonButton } from "@/components/shared/coming-soon-button";
+import { BudgetsSection } from "@/components/settings/budgets-section";
+import { IncomeSection } from "@/components/settings/income-section";
 
 export function AjustesContent() {
   const router = useRouter();
@@ -82,13 +84,13 @@ export function AjustesContent() {
       </div>
 
       <div className="flex flex-col gap-3">
+        <p className="text-sm font-medium text-muted-foreground">Ingresos del mes</p>
+        <IncomeSection />
+      </div>
+
+      <div className="flex flex-col gap-3">
         <p className="text-sm font-medium text-muted-foreground">Presupuestos</p>
-        <EmptyState
-          icon={Wallet}
-          title="Sin presupuestos configurados"
-          description="Definí un tope mensual por categoría y te avisamos al 80% y al 100%."
-          action={<ComingSoonButton phase="Fase 5">Configurar presupuestos</ComingSoonButton>}
-        />
+        <BudgetsSection />
       </div>
 
       <Button variant="outline" onClick={handleLogout} className="mt-2">
