@@ -24,7 +24,7 @@ Fuente de verdad: `supabase/migrations/0001_init.sql`. Resumen:
 - `households` / `household_members` — un hogar, dos miembros (`user_id` único por miembro). Alta vía código de invitación de 6 caracteres.
 - `categories` — por hogar, con `color` (hex) e `icon` (nombre lucide).
 - `budgets` — presupuesto por categoría con historial: se inserta una fila nueva solo cuando el monto cambia (`effective_month`); el vigente para un mes es la fila más reciente con `effective_month <= mes`.
-- `expenses` — `paid_by` + `payer_share_percentage` (% que le corresponde a quien pagó) definen el split. `split_type` es solo la etiqueta de UI (`50_50` / `custom` / `only_payer`); el cálculo real siempre usa `payer_share_percentage`.
+- `expenses` — `paid_by` + `payer_share_percentage` (% que le corresponde a quien pagó) definen el split. `split_type` es solo la etiqueta de UI (`50_50` / `custom` / `only_payer`); el cálculo real siempre usa `payer_share_percentage`. `settled_on_payment` marca los gastos que no generan deuda (cada uno puso su parte al pagar): el balance los ignora, pero el reparto de consumo se sigue calculando igual.
 - `settlements` — registra cuando se saldó el balance entre los dos.
 - `recurring_expenses` (definición) + `recurring_expense_instances` (ocurrencia mensual, con `expense_id` que se completa al marcar como pagado y `invoice_url` en Supabase Storage).
 - `shopping_items` — cubre las dos sub-listas de "Listas" via `list_type` (`faltantes` | `super`). Tabla agregada a la publicación `supabase_realtime`.
@@ -67,11 +67,13 @@ Ningún cambio de código queda sin commitear y pushear. `main` autodeploya a Ve
 1. ✅ Setup, auth, esqueleto de navegación con diseño final
 2. ✅ Gastos + split entre los dos
 3. ✅ Deploy a Vercel
-4. ⚠️ Gastos fijos (hecho) + facturas en Supabase Storage (pendiente)
+4. ✅ Gastos fijos + facturas en Supabase Storage
 5. ✅ Presupuestos + gráficos de Inicio
 6. ✅ Listas (faltantes de la casa + súper, con Realtime)
 
-Lo único del plan original que quedó sin hacer es la parte de **facturas** de la Fase 4: `recurring_expense_instances.invoice_url` está en el esquema y en los tipos, pero nada la escribe ni la lee.
+**El plan original está completo.** Las facturas se subieron al bucket privado `facturas` con la ruta `{household_id}/{instance_id}.{ext}`; `invoice_url` guarda esa ruta y no una URL, porque las firmadas vencen y se generan al momento de mirar la factura (`lib/facturas.ts`).
+
+Además del plan hay un caso que no estaba previsto: los gastos que **no generan deuda** (`expenses.settled_on_payment`), para el alquiler y similares donde uno paga y el otro le transfiere en el momento. `paid_by` sigue definiendo el reparto de consumo; lo único que cambia es que `computeBalance()` los saltea.
 
 ## Notas del entorno
 
