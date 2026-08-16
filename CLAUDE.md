@@ -48,6 +48,7 @@ El onboarding no inserta directo. `create_household()` y `join_household()` (`su
 - Estados vacíos: componente compartido `components/shared/empty-state.tsx`.
 - `components/shared/coming-soon-button.tsx` existe pero ya no se usa: no queda funcionalidad sin conectar. No reintroducirlo — si algo no está listo, no se muestra el botón.
 - El balance entre los dos nunca se persiste como número: se recalcula siempre a partir de `expenses` + `settlements` con `lib/utils/split.ts`.
+- Un `settlement` guarda un monto y una persona, **no contra qué gastos se calculó**. Por eso puede quedar huérfano: si se borran los gastos que lo justificaban, el saldo sigue vivo y el balance queda invertido. Ya pasó una vez, con un saldo de $910.000 sobre un hogar sin ningún gasto. Mitigado por dos lados —`SettlementsDialog` permite deshacer un saldo desde Inicio, y borrar un gasto anterior al último saldo muestra un aviso— pero el modelo sigue sin poder detectar la incoherencia solo. Si algún día molesta, la solución de fondo es que el saldo guarde hasta qué fecha salda.
 
 ## Decisiones de diseño (con trade-offs ya conversados)
 

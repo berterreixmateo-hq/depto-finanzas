@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowDown,
   ArrowUp,
+  History,
   PiggyBank,
   Receipt,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ExpenseDialog } from "@/components/expenses/expense-dialog";
 import { MonthSummary } from "@/components/dashboard/month-summary";
 import { TrendChart } from "@/components/dashboard/trend-chart";
+import { SettlementsDialog } from "@/components/dashboard/settlements-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +59,8 @@ export function InicioView() {
   const [recent, setRecent] = useState<ExpenseWithCategory[]>([]);
   const [confirmSettle, setConfirmSettle] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [historialOpen, setHistorialOpen] = useState(false);
+  const [haySaldos, setHaySaldos] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -93,6 +97,7 @@ export function InicioView() {
     }
 
     const expenses = (allExpenses.data ?? []) as BalanceExpense[];
+    setHaySaldos((settlements.data ?? []).length > 0);
 
     const sumInRange = (from: string, to: string) =>
       expenses
@@ -203,13 +208,28 @@ export function InicioView() {
               </p>
             </div>
           )}
-          {!loading && partnerId && balance !== 0 ? (
-            <Button variant="outline" size="sm" onClick={() => setConfirmSettle(true)}>
-              Saldar
-            </Button>
-          ) : (
-            <PiggyBank className="size-6 text-muted-foreground" />
-          )}
+          <div className="flex shrink-0 items-center gap-1">
+            {/* Solo aparece si hay algo que mirar: un saldo mal registrado se
+                deshace desde acá, sin pasar por el SQL Editor. */}
+            {!loading && haySaldos && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-muted-foreground"
+                aria-label="Ver saldos registrados"
+                onClick={() => setHistorialOpen(true)}
+              >
+                <History className="size-4" />
+              </Button>
+            )}
+            {!loading && partnerId && balance !== 0 ? (
+              <Button variant="outline" size="sm" onClick={() => setConfirmSettle(true)}>
+                Saldar
+              </Button>
+            ) : (
+              !haySaldos && <PiggyBank className="size-6 text-muted-foreground" />
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -264,6 +284,8 @@ export function InicioView() {
       </div>
 
       <ExpenseDialog open={addOpen} onOpenChange={setAddOpen} />
+
+      <SettlementsDialog open={historialOpen} onOpenChange={setHistorialOpen} />
 
       <AlertDialog open={confirmSettle} onOpenChange={setConfirmSettle}>
         <AlertDialogContent>

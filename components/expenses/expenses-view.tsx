@@ -71,6 +71,9 @@ export function ExpensesView() {
   const [ticketOpen, setTicketOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ExpenseWithCategory | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ExpenseWithCategory | null>(null);
+  // Fecha del último "Saldar". Un gasto anterior a ese momento ya entró en un
+  // balance que se dio por cerrado: borrarlo lo mueve para atrás.
+  const [ultimoSaldo, setUltimoSaldo] = useState<string | null>(null);
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true);
@@ -101,6 +104,22 @@ export function ExpensesView() {
     setExpenses((data ?? []) as ExpenseWithCategory[]);
   }, [supabase, householdId, monthDate, categoryFilter, debouncedSearch]);
 
+  const fetchUltimoSaldo = useCallback(async () => {
+    const { data } = await supabase
+      .from("settlements")
+      .select("created_at")
+      .eq("household_id", householdId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    setUltimoSaldo(data?.[0]?.created_at ?? null);
+  }, [supabase, householdId]);
+
+  useEffect(() => {
+    fetchUltimoSaldo();
+  }, [fetchUltimoSaldo]);
+
+  useEffect(() => onExpensesChanged(fetchUltimoSaldo), [fetchUltimoSaldo]);
+
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timeout);
@@ -129,6 +148,11 @@ export function ExpensesView() {
     { value: "all", label: "Todas las categorías" },
     ...categories.map((category) => ({ value: category.id, label: category.name })),
   ];
+
+  // El gasto ya estaba contado cuando se registró el último "Saldar", así que
+  // borrarlo cambia un balance que los dos dieron por cerrado.
+  const yaSaldado =
+    !!deleteTarget && !!ultimoSaldo && deleteTarget.created_at < ultimoSaldo;
 
   const groups = new Map<string, ExpenseWithCategory[]>();
   for (const expense of expenses) {
@@ -303,6 +327,14 @@ export function ExpensesView() {
               {deleteTarget?.description} · {deleteTarget ? formatCurrency(deleteTarget.amount) : ""}
               . Esta acción no se puede deshacer.
             </AlertDialogDescription>
+            {yaSaldado && (
+              <p className="rounded-xl bg-warning/10 p-3 text-sm text-warning-foreground">
+                Ojo: este gasto ya estaba contado cuando saldaron el{" "}
+                {format(new Date(ultimoSaldo!), "d 'de' MMMM", { locale: es })}. Si lo
+                borrás, el balance entre ustedes se va a mover aunque ese saldo ya esté
+                pago. Revisá el historial de saldos en Inicio.
+              </p>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
