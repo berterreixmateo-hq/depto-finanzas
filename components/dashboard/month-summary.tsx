@@ -94,6 +94,32 @@ function Medidor({ fila }: { fila: Fila }) {
   );
 }
 
+/**
+ * Una cifra del mes con su etiqueta.
+ *
+ * En mobile va en fila (etiqueta izquierda, número derecha) y recién en `sm`
+ * pasa a columna. No es capricho: a 375px, tres columnas dejan ~77px de
+ * contenido por tarjeta y un monto como `$ 2.450.000` necesita ~105px con
+ * cifras tabulares. No hay tamaño de letra legible que entre, así que el `$`
+ * caía solo a la línea de abajo.
+ */
+function Tile({
+  label,
+  value,
+  tone = "",
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm sm:block">
+      <p className="shrink-0 text-xs text-muted-foreground">{label}</p>
+      <p className={`text-lg font-semibold tabular-nums sm:mt-1 ${tone}`}>{value}</p>
+    </div>
+  );
+}
+
 export function MonthSummary() {
   const supabase = createClient();
   const { householdId, userId, partnerId, partnerName, categories } = useHousehold();
@@ -188,27 +214,16 @@ export function MonthSummary() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
         <p className="text-sm font-medium text-muted-foreground">Tu mes</p>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-2xl bg-card p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Ingreso</p>
-            <p className="mt-1 text-lg font-semibold">
-              {miIngreso > 0 ? formatCurrency(miIngreso) : "—"}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-card p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Gastaste</p>
-            <p className="mt-1 text-lg font-semibold">{formatCurrency(miGasto)}</p>
-          </div>
-          <div className="rounded-2xl bg-card p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Ahorro</p>
-            <p
-              className={`mt-1 text-lg font-semibold ${
-                miIngreso === 0 ? "" : miAhorro >= 0 ? "text-success" : "text-danger"
-              }`}
-            >
-              {miIngreso > 0 ? formatCurrency(miAhorro) : "—"}
-            </p>
-          </div>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <Tile label="Ingreso" value={miIngreso > 0 ? formatCurrency(miIngreso) : "—"} />
+          <Tile label="Gastaste" value={formatCurrency(miGasto)} />
+          <Tile
+            label="Ahorro"
+            value={miIngreso > 0 ? formatCurrency(miAhorro) : "—"}
+            tone={
+              miIngreso === 0 ? "" : miAhorro >= 0 ? "text-success" : "text-danger"
+            }
+          />
         </div>
         {miIngreso === 0 && (
           <p className="text-xs text-muted-foreground">

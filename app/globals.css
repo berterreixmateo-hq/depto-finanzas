@@ -54,66 +54,84 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Cálido y doméstico: los grises llevan un tinte cálido (croma ~0.01 sobre
+   hue 60–85) en vez de ser neutros puros, y la tarjeta queda en blanco limpio
+   para que levante sobre el fondo crema.
+
+   El primario es un espresso, no un color de marca saturado, y es a propósito:
+   las categorías ya ocupan ocho matices (teal, ámbar, naranja, rosa, índigo,
+   celeste, violeta y el gris de "Otros"). Un primario saturado competiría con
+   ellos —el relleno del medidor usa `--color-primary`, y si coincidiera con el
+   color de una categoría volveríamos al bug que ya arreglamos— así que acá el
+   color queda reservado para lo que significa algo: estado y categoría. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.981 0.008 85);
+  --foreground: oklch(0.2 0.012 60);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.2 0.012 60);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.2 0.012 60);
+  --primary: oklch(0.3 0.028 55);
+  --primary-foreground: oklch(0.98 0.008 85);
+  --secondary: oklch(0.955 0.011 85);
+  --secondary-foreground: oklch(0.28 0.022 55);
+  --muted: oklch(0.955 0.011 85);
+  --muted-foreground: oklch(0.518 0.016 65);
+  --accent: oklch(0.944 0.015 85);
+  --accent-foreground: oklch(0.28 0.022 55);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.903 0.011 80);
+  --input: oklch(0.903 0.011 80);
+  --ring: oklch(0.55 0.03 60);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --success: oklch(0.6 0.14 155);
+  /* L 0.52 y no 0.6: el verde va como texto en "Ahorro" y en "te debe", y a
+     0.6 daba 3.69 sobre la tarjeta blanca, abajo del 4.5 de texto normal.
+     Este escalón da 5.16 sobre tarjeta y 4.87 sobre el fondo crema. */
+  --success: oklch(0.52 0.13 155);
   --success-foreground: oklch(0.985 0 0);
   --warning: oklch(0.77 0.15 75);
   --warning-foreground: oklch(0.28 0.06 75);
   --danger: oklch(0.577 0.22 27);
   --danger-foreground: oklch(0.985 0 0);
-  --radius: 0.75rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Más redondeo: 1rem de base sube las tarjetas a 1.8rem por la escala del
+     @theme. Es lo que más empuja la lectura de "casa" y no de banco. */
+  --radius: 1rem;
+  --sidebar: oklch(0.968 0.01 85);
+  --sidebar-foreground: oklch(0.2 0.012 60);
+  --sidebar-primary: oklch(0.3 0.028 55);
+  --sidebar-primary-foreground: oklch(0.98 0.008 85);
+  --sidebar-accent: oklch(0.93 0.016 85);
+  --sidebar-accent-foreground: oklch(0.28 0.022 55);
+  --sidebar-border: oklch(0.903 0.011 80);
+  --sidebar-ring: oklch(0.55 0.03 60);
 }
 
+/* El oscuro también va tibio: carbón con tinte cálido, no gris neutro. El
+   primario se invierte a crema —sobre fondo oscuro el botón sólido tiene que
+   ser claro— pero conserva el mismo tinte, así no se siente otro producto. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.172 0.008 60);
+  --foreground: oklch(0.962 0.006 85);
+  --card: oklch(0.223 0.01 60);
+  --card-foreground: oklch(0.962 0.006 85);
+  --popover: oklch(0.223 0.01 60);
+  --popover-foreground: oklch(0.962 0.006 85);
+  --primary: oklch(0.925 0.014 85);
+  --primary-foreground: oklch(0.223 0.018 55);
+  --secondary: oklch(0.288 0.011 60);
+  --secondary-foreground: oklch(0.962 0.006 85);
+  --muted: oklch(0.288 0.011 60);
+  --muted-foreground: oklch(0.722 0.014 75);
+  --accent: oklch(0.288 0.011 60);
+  --accent-foreground: oklch(0.962 0.006 85);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --border: oklch(0.98 0.01 85 / 12%);
+  --input: oklch(0.98 0.01 85 / 16%);
+  --ring: oklch(0.6 0.02 70);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -125,14 +143,14 @@
   --warning-foreground: oklch(0.2 0.04 75);
   --danger: oklch(0.7 0.19 27);
   --danger-foreground: oklch(0.145 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.198 0.009 60);
+  --sidebar-foreground: oklch(0.962 0.006 85);
+  --sidebar-primary: oklch(0.925 0.014 85);
+  --sidebar-primary-foreground: oklch(0.223 0.018 55);
+  --sidebar-accent: oklch(0.288 0.011 60);
+  --sidebar-accent-foreground: oklch(0.962 0.006 85);
+  --sidebar-border: oklch(0.98 0.01 85 / 12%);
+  --sidebar-ring: oklch(0.6 0.02 70);
 }
 
 @layer base {

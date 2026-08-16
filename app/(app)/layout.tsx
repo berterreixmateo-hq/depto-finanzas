@@ -85,7 +85,10 @@ export default async function AppLayout({
       <div className="flex min-h-dvh">
         <Sidebar />
         <div className="flex flex-1 flex-col">
-          <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-12 md:pt-10">
+          {/* pb-36 (144px) y no menos: el FAB arranca a 68px del piso y mide
+              56px, así que su borde superior queda a 124px. Con pb-28 tapaba
+              el último elemento de cada pantalla. */}
+          <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-36 pt-6 md:px-8 md:pb-12 md:pt-10">
             {children}
           </main>
         </div>

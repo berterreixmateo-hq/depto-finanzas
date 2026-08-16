@@ -156,11 +156,16 @@ export function InicioView() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <p className="text-sm text-muted-foreground capitalize">{MES_ACTUAL}</p>
+        {/* El mes en versalitas y chico, el número un escalón más abajo que
+            antes: a 375px `text-5xl` ocupaba casi todo el ancho y aplastaba
+            todo lo que venía después. */}
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {MES_ACTUAL}
+        </p>
         {loading ? (
-          <Skeleton className="h-12 w-48" />
+          <Skeleton className="mt-1 h-11 w-48" />
         ) : (
-          <p className="text-5xl font-semibold tabular-nums tracking-tight">
+          <p className="mt-0.5 text-4xl font-semibold tabular-nums tracking-tight sm:text-5xl">
             {formatCurrency(totalMes)}
           </p>
         )}
