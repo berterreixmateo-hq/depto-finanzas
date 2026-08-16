@@ -253,7 +253,15 @@ export function ShoppingList({
   const totalEstimado = conPrecioConocido.length
     ? conPrecioConocido.reduce((sum, i) => sum + precios[i.coto_ean!]!, 0)
     : null;
-  const sinPrecio = items.length - conPrecioConocido.length;
+
+  // "Todavía no lo buscamos" y "no lo encontramos" son cosas distintas y hasta
+  // ahora se contaban juntas: mientras la consulta a Coto estaba en vuelo, un
+  // producto vinculado aparecía como "sin vincular" y el cartel se corregía
+  // solo unos segundos después.
+  const buscando = items.filter(
+    (i) => i.coto_ean && precios[i.coto_ean] === undefined,
+  ).length;
+  const sinVincular = items.filter((i) => !i.coto_ean).length;
 
   return (
     <div className="flex flex-col gap-4">
@@ -315,18 +323,27 @@ export function ShoppingList({
                 </span>
                 {conPrecios &&
                   (item.coto_ean ? (
-                    <button
-                      type="button"
-                      onClick={() => setPrecioTarget(item)}
-                      className="shrink-0 text-sm tabular-nums text-muted-foreground hover:text-foreground"
-                      aria-label={`Cambiar el producto vinculado a ${item.name}`}
-                    >
-                      {precios[item.coto_ean] === undefined
-                        ? "…"
-                        : precios[item.coto_ean] === null
+                    precios[item.coto_ean] === undefined ? (
+                      /* Antes acá iba un "…", que se lee como un menú y no
+                         como una espera: durante los segundos que tarda Coto
+                         parecía que el producto no tenía precio. */
+                      <span
+                        role="status"
+                        aria-label={`Buscando el precio de ${item.name} en Coto`}
+                        className="h-4 w-14 shrink-0 animate-pulse rounded-full bg-muted"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setPrecioTarget(item)}
+                        className="shrink-0 text-sm tabular-nums text-muted-foreground hover:text-foreground"
+                        aria-label={`Cambiar el producto vinculado a ${item.name}`}
+                      >
+                        {precios[item.coto_ean] === null
                           ? "—"
                           : formatCurrency(precios[item.coto_ean]!)}
-                    </button>
+                      </button>
+                    )
                   ) : (
                     <Button
                       variant="ghost"
@@ -356,7 +373,11 @@ export function ShoppingList({
             <div className="flex items-baseline justify-between rounded-xl bg-card px-4 py-3 shadow-sm">
               <span className="text-sm text-muted-foreground">
                 Estimado en Coto
-                {sinPrecio > 0 && ` · ${sinPrecio} sin vincular`}
+                {buscando > 0
+                  ? ` · buscando ${buscando} precio${buscando === 1 ? "" : "s"}…`
+                  : sinVincular > 0
+                    ? ` · ${sinVincular} sin vincular`
+                    : ""}
               </span>
               <span className="font-medium tabular-nums">
                 {formatCurrency(totalEstimado)}
