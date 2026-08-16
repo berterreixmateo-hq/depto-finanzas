@@ -199,7 +199,10 @@ export function RecurringForm({
         </Select>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      {/* Una columna en mobile: un input `type="month"` renderiza el mes en
+          castellano ("agosto de 2026") más el ícono del selector nativo, y a
+          375px eso no entra en media pantalla — se veía "agosto de 20:". */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
           <Label>Cada cuánto</Label>
           <Select
