@@ -48,9 +48,14 @@ export function PayForm({
   const [saving, setSaving] = useState(false);
   const facturaRef = useRef<HTMLInputElement>(null);
 
+  // Centinela: no es un uuid, así que nunca choca con un user_id real.
+  const AMBOS = "ambos";
+  const ambos = paidBy === AMBOS;
+
   const payerItems = [
     { value: userId, label: `Yo (${displayName})` },
     ...(partnerId ? [{ value: partnerId, label: partnerName ?? "Mi pareja" }] : []),
+    ...(partnerId ? [{ value: AMBOS, label: "Pagamos los dos" }] : []),
   ];
 
   async function handleSubmit(e: React.FormEvent) {
@@ -76,8 +81,12 @@ export function PayForm({
         description: servicio.name,
         amount: amountValue,
         expense_date: format(new Date(), "yyyy-MM-dd"),
-        paid_by: paidBy,
+        // Con "pagamos los dos" el gasto queda a nombre de quien lo carga,
+        // porque de eso depende a quién se refiere el porcentaje; lo que cambia
+        // es que `settled_on_payment` hace que no genere deuda.
+        paid_by: ambos ? userId : paidBy,
         payer_share_percentage: 50,
+        settled_on_payment: ambos,
         split_type: "50_50",
         source: "recurring",
         recurring_instance_id: servicio.instance.id,
@@ -174,9 +183,14 @@ export function PayForm({
             {partnerId && (
               <SelectItem value={partnerId}>{partnerName ?? "Mi pareja"}</SelectItem>
             )}
+            {partnerId && <SelectItem value={AMBOS}>Pagamos los dos</SelectItem>}
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">Se divide 50/50 entre los dos.</p>
+        <p className="text-xs text-muted-foreground">
+          {ambos
+            ? "Cada uno puso su parte: no genera deuda entre ustedes."
+            : "Se divide 50/50 entre los dos."}
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">
