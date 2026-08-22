@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useHousehold } from "@/lib/household-context";
+import { AMBOS, camposDePagador } from "@/lib/utils/payer";
+import { PayerSelect } from "@/components/shared/payer-select";
 import { notifyExpensesChanged } from "@/lib/expenses-bus";
 import type { ExpenseWithCategory } from "@/lib/types/expense";
 import type { SplitType } from "@/lib/types/database.types";
@@ -35,8 +37,7 @@ export function ExpenseForm({
   onCancel: () => void;
 }) {
   const supabase = createClient();
-  const { householdId, userId, displayName, partnerId, partnerName, categories } =
-    useHousehold();
+  const { householdId, userId, partnerName, categories } = useHousehold();
 
   const [amount, setAmount] = useState(expense ? amountToInput(expense.amount) : "");
   const [description, setDescription] = useState(expense?.description ?? "");
@@ -45,7 +46,7 @@ export function ExpenseForm({
   );
   const [date, setDate] = useState(expense?.expense_date ?? todayLocal());
   const [paidBy, setPaidBy] = useState(
-    expense?.settled_on_payment ? "ambos" : (expense?.paid_by ?? userId),
+    expense?.settled_on_payment ? AMBOS : (expense?.paid_by ?? userId),
   );
   const [splitType, setSplitType] = useState<SplitType>(
     expense?.split_type ?? "50_50",
@@ -57,8 +58,6 @@ export function ExpenseForm({
   );
   const [saving, setSaving] = useState(false);
 
-  // Centinela: no es un uuid, así que nunca choca con un user_id real.
-  const AMBOS = "ambos";
   const ambos = paidBy === AMBOS;
 
   // Con "pagamos los dos" el porcentaje se refiere a quien carga el gasto, así
@@ -71,11 +70,6 @@ export function ExpenseForm({
     value: category.id,
     label: category.name,
   }));
-  const payerItems = [
-    { value: userId, label: `Yo (${displayName})` },
-    ...(partnerId ? [{ value: partnerId, label: partnerName ?? "Mi pareja" }] : []),
-    ...(partnerId ? [{ value: AMBOS, label: "Pagamos los dos" }] : []),
-  ];
 
   function payerSharePercentage(): number {
     if (splitType === "50_50") return 50;
@@ -109,13 +103,9 @@ export function ExpenseForm({
       description: description.trim(),
       amount: amountValue,
       expense_date: date,
-      // `paid_by` sigue siendo la persona a la que se refiere el porcentaje,
-      // porque de eso depende cuánto consumió cada uno. Con "pagamos los dos"
-      // eso es quien carga el gasto; lo que cambia es que no hay deuda.
-      paid_by: ambos ? userId : paidBy,
+      ...camposDePagador(paidBy, userId),
       payer_share_percentage: payerSharePercentage(),
       split_type: splitType,
-      settled_on_payment: ambos,
       created_by: userId,
     };
 
@@ -207,30 +197,7 @@ export function ExpenseForm({
             onChange={(e) => setDate(e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <Label>Quién pagó</Label>
-          <Select
-            items={payerItems}
-            value={paidBy}
-            onValueChange={(value) => value && setPaidBy(value)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={userId}>Yo ({displayName})</SelectItem>
-              {partnerId && (
-                <SelectItem value={partnerId}>{partnerName}</SelectItem>
-              )}
-              {partnerId && <SelectItem value={AMBOS}>Pagamos los dos</SelectItem>}
-            </SelectContent>
-          </Select>
-          {ambos && (
-            <p className="text-xs text-muted-foreground">
-              Cada uno puso su parte: no genera deuda entre ustedes.
-            </p>
-          )}
-        </div>
+        <PayerSelect value={paidBy} onValueChange={setPaidBy} />
       </div>
 
       <div className="flex flex-col gap-2">

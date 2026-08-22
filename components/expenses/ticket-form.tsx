@@ -6,6 +6,8 @@ import { Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useHousehold } from "@/lib/household-context";
+import { camposDePagador } from "@/lib/utils/payer";
+import { PayerSelect } from "@/components/shared/payer-select";
 import { notifyExpensesChanged } from "@/lib/expenses-bus";
 import type { TicketData } from "@/lib/tickets";
 import { amountToInput, formatAmountInput, parseAmountInput, formatCurrency } from "@/lib/utils/currency";
@@ -28,8 +30,7 @@ export function TicketForm({
   onCancel: () => void;
 }) {
   const supabase = createClient();
-  const { householdId, userId, displayName, partnerId, partnerName, categories } =
-    useHousehold();
+  const { householdId, userId, categories } = useHousehold();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [leyendo, setLeyendo] = useState(false);
@@ -44,10 +45,6 @@ export function TicketForm({
   const [saving, setSaving] = useState(false);
 
   const categoryItems = categories.map((c) => ({ value: c.id, label: c.name }));
-  const payerItems = [
-    { value: userId, label: `Yo (${displayName})` },
-    ...(partnerId ? [{ value: partnerId, label: partnerName ?? "Mi pareja" }] : []),
-  ];
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -110,7 +107,7 @@ export function TicketForm({
         description: description.trim(),
         amount: amountValue,
         expense_date: date,
-        paid_by: paidBy,
+        ...camposDePagador(paidBy, userId),
         payer_share_percentage: 50,
         split_type: "50_50",
         source: "ticket",
@@ -278,24 +275,7 @@ export function TicketForm({
             onChange={(e) => setDate(e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <Label>Quién pagó</Label>
-          <Select
-            items={payerItems}
-            value={paidBy}
-            onValueChange={(value) => value && setPaidBy(value)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={userId}>Yo ({displayName})</SelectItem>
-              {partnerId && (
-                <SelectItem value={partnerId}>{partnerName ?? "Mi pareja"}</SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+        <PayerSelect value={paidBy} onValueChange={setPaidBy} />
       </div>
 
       {ticket.items.length > 0 && (

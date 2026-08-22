@@ -18,13 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { PayerSelect } from "@/components/shared/payer-select";
+import { camposDePagador } from "@/lib/utils/payer";
 
 export function PayForm({
   servicio,
@@ -36,7 +31,7 @@ export function PayForm({
   onCancel: () => void;
 }) {
   const supabase = createClient();
-  const { householdId, userId, displayName, partnerId, partnerName } = useHousehold();
+  const { householdId, userId } = useHousehold();
 
   // El monto real casi nunca coincide con el estimado, así que se puede
   // corregir acá; lo que se guarda como gasto es este, no el de la definición.
@@ -47,16 +42,6 @@ export function PayForm({
   const [factura, setFactura] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const facturaRef = useRef<HTMLInputElement>(null);
-
-  // Centinela: no es un uuid, así que nunca choca con un user_id real.
-  const AMBOS = "ambos";
-  const ambos = paidBy === AMBOS;
-
-  const payerItems = [
-    { value: userId, label: `Yo (${displayName})` },
-    ...(partnerId ? [{ value: partnerId, label: partnerName ?? "Mi pareja" }] : []),
-    ...(partnerId ? [{ value: AMBOS, label: "Pagamos los dos" }] : []),
-  ];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -81,12 +66,8 @@ export function PayForm({
         description: servicio.name,
         amount: amountValue,
         expense_date: format(new Date(), "yyyy-MM-dd"),
-        // Con "pagamos los dos" el gasto queda a nombre de quien lo carga,
-        // porque de eso depende a quién se refiere el porcentaje; lo que cambia
-        // es que `settled_on_payment` hace que no genere deuda.
-        paid_by: ambos ? userId : paidBy,
+        ...camposDePagador(paidBy, userId),
         payer_share_percentage: 50,
-        settled_on_payment: ambos,
         split_type: "50_50",
         source: "recurring",
         recurring_instance_id: servicio.instance.id,
@@ -168,30 +149,11 @@ export function PayForm({
         </p>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label>Quién pagó</Label>
-        <Select
-          items={payerItems}
-          value={paidBy}
-          onValueChange={(value) => value && setPaidBy(value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={userId}>Yo ({displayName})</SelectItem>
-            {partnerId && (
-              <SelectItem value={partnerId}>{partnerName ?? "Mi pareja"}</SelectItem>
-            )}
-            {partnerId && <SelectItem value={AMBOS}>Pagamos los dos</SelectItem>}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">
-          {ambos
-            ? "Cada uno puso su parte: no genera deuda entre ustedes."
-            : "Se divide 50/50 entre los dos."}
-        </p>
-      </div>
+      <PayerSelect
+        value={paidBy}
+        onValueChange={setPaidBy}
+        hint="Se divide 50/50 entre los dos."
+      />
 
       <div className="flex flex-col gap-2">
         <Label>Factura</Label>

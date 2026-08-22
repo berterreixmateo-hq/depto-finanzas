@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useHousehold } from "@/lib/household-context";
+import { camposDePagador } from "@/lib/utils/payer";
+import { PayerSelect } from "@/components/shared/payer-select";
 import { notifyExpensesChanged } from "@/lib/expenses-bus";
 import {
   amountToInput,
@@ -49,8 +51,7 @@ export function CerrarCompraForm({
   onCancel: () => void;
 }) {
   const supabase = createClient();
-  const { householdId, userId, displayName, partnerId, partnerName, categories } =
-    useHousehold();
+  const { householdId, userId, categories } = useHousehold();
 
   const conocidos = items.filter((i) => typeof i.precio === "number");
   const estimado = conocidos.reduce((sum, i) => sum + (i.precio ?? 0), 0);
@@ -64,10 +65,6 @@ export function CerrarCompraForm({
   const [saving, setSaving] = useState(false);
 
   const categoryItems = categories.map((c) => ({ value: c.id, label: c.name }));
-  const payerItems = [
-    { value: userId, label: `Yo (${displayName})` },
-    ...(partnerId ? [{ value: partnerId, label: partnerName ?? "Mi pareja" }] : []),
-  ];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -92,7 +89,7 @@ export function CerrarCompraForm({
         description: `Compra de súper (${items.length} producto${items.length === 1 ? "" : "s"})`,
         amount: total,
         expense_date: format(new Date(), "yyyy-MM-dd"),
-        paid_by: paidBy,
+        ...camposDePagador(paidBy, userId),
         payer_share_percentage: 50,
         split_type: "50_50",
         source: "shopping",
@@ -199,25 +196,11 @@ export function CerrarCompraForm({
         </Select>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label>Quién pagó</Label>
-        <Select
-          items={payerItems}
-          value={paidBy}
-          onValueChange={(value) => value && setPaidBy(value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={userId}>Yo ({displayName})</SelectItem>
-            {partnerId && (
-              <SelectItem value={partnerId}>{partnerName ?? "Mi pareja"}</SelectItem>
-            )}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">Se divide 50/50 entre los dos.</p>
-      </div>
+      <PayerSelect
+        value={paidBy}
+        onValueChange={setPaidBy}
+        hint="Se divide 50/50 entre los dos."
+      />
 
       <div className="max-h-32 overflow-y-auto rounded-xl bg-card p-1">
         {items.map((i) => (
